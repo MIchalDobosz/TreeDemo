@@ -1,0 +1,8 @@
+.liItem:hover > .optionsToggle {
+    display: inline !important;
+}
+
+.optionsToggle {
+    display: none;
+}
+
