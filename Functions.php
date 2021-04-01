@@ -22,10 +22,6 @@ function getStruct($connection, $orderBy, $orderDir)
 
 function displayStruct() {
 
-    $return = '<a href=index.php?'.http_build_query(array_merge($_GET, array("orderBy"=>"id", "orderDir"=>"ASC"))).'>Id ASC</a>
-               <a href=index.php?'.http_build_query(array_merge($_GET, array("orderBy"=>"id", "orderDir"=>"DESC"))).'>Id DESC</a>
-               <a href=index.php?'.http_build_query(array_merge($_GET, array("orderBy"=>"name", "orderDir"=>"ASC"))).'>Name ASC</a>
-               <a href=index.php?'.http_build_query(array_merge($_GET, array("orderBy"=>"name", "orderDir"=>"DESC"))).'>Name DESC</a><br>';
     $connection = getDbConnection();
 
     if (isset($_GET['orderBy']) && isset($_GET['orderDir'])) {
@@ -34,44 +30,71 @@ function displayStruct() {
         $struct = getStruct($connection, "id", "ASC");
     }
 
-    if (isset($_GET['id']) && !isset($_GET['d'])) {
+    $root = "";
+    foreach ($struct as $item) {
+        if ($item->parent_id == "") {
+            $root = $item;
+        }
+    }
+
+    if (isset($_GET['id'])) {
         foreach ($struct as $item) {
             if ($item->id == $_GET['id']) {
-                $return .= "<ul>".structToHtmlList($struct, $item)."</ul>";
-                return $return;
+                //TODO: Dodać wracanko do rodzica
+                return "<ul>".structToHtmlList($struct, $item, $root)."</ul>";
             }
         }
-    } elseif (isset($_GET['id']) && isset($_GET['d']) && $_GET['d'] == 1) {
-        delete($connection, $struct, $_GET['id']);
     } else {
-        $root = "";
-        foreach ($struct as $item) {
-            if ($item->parent_id == "") {
-                $root = $item;
-            }
-        }
         header("Location: index.php?id=".$root->id);
     }
 }
 
 
-function structToHtmlList($struct, $currentItem) {
+function structToHtmlList($struct, $currentItem, $root) {
 
-    $options = '';
-    foreach ($struct as $item) {
-        if ($item->id != $currentItem->id && $item->id != $currentItem->parent_id && $item->parent_id != $currentItem->id) {
-            $options .= '<option value="'.$item->id.'">'.$item->name.'</option>';
+    $placeholder = "Rename";
+
+    if ($currentItem->id == $root->id) {
+        $return = '<li class="liItem"><a href="index.php?id=' . $currentItem->id . '">' . $currentItem->name . '</a>
+                <input id="optionsToggle' . $currentItem->id . '" type="button" class="optionsToggle" onclick="displayOptions(' . $currentItem->id . ')" value="Options">
+                <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
+                <input id="id' . $currentItem->id . '" class="id" type="text" name="id" value="' . $currentItem->id . '" style="display: none"> 
+                <input id="editInput' . $currentItem->id . '" class="editInput" type="text" name="editInput" placeholder="'.$placeholder.'" style="display: none"> 
+                <input id="editSubmit' . $currentItem->id . '" class="editSubmit" type="submit" value="Update" style="display: none"></form>
+                <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
+                <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
+                <input id="idNew' . $currentItem->id . '" class="idNew" type="text" name="idNew" value="' . $currentItem->id . '" style="display: none"> 
+                <input id="newInput' . $currentItem->id . '" class="newInput" type="text" name="newInput" placeholder="Enter name" style="display: none"> 
+                <input id="newSubmit' . $currentItem->id . '" class="newSubmit" type="submit" value="Add" style="display: none"></form>
+                <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
+                <input id="idNew' . $currentItem->id . '" class="idNew" type="text" name="idNew" value="' . $currentItem->id . '" style="display: none"> 
+                <input id="newInput' . $currentItem->id . '" class="newInput" type="text" name="newInput" placeholder="Enter name" style="display: none"> 
+                <input id="newSubmit' . $currentItem->id . '" class="newSubmit" type="submit" value="Add" style="display: none"></form></li>';
+    } else {
+        $options = '';
+        $nodeIds = explode(",", nodeToString($struct, $currentItem));
+
+        foreach ($struct as $item) {
+            if (!in_array($item->id, $nodeIds) && $item->id != $currentItem->parent_id) {
+                $options .= '<option value="' . $item->id . '">' . $item->name . '</option>';
+            }
         }
-    }
 
-    $return = '<form action='.htmlspecialchars($_SERVER["PHP_SELF"]).' method="post"><li class="liItem"><a href="index.php?id='.$currentItem->id.'">'.$currentItem->name.'</a>
-                <input id="optionsToggle'.$currentItem->id.'" type="button" class="optionsToggle" onclick="displayOptions('.$currentItem->id.')" value="Options">
-                <a id="delete'.$currentItem->id.'" href="index.php?id='.$currentItem->id.'&d=1" style="display: none"> Delete</a>
-                <input id="id'.$currentItem->id.'" class="id" type="text" name="id" value="'.$currentItem->id.'" style="display: none"> 
-                <input id="editInput'.$currentItem->id.'" class="editInput" type="text" name="editInput" style="display: none"> 
-                <select id ="editSelect'.$currentItem->id.'" class="editSelect" name="editSelect" style="display: none"><option value="" selected disabled hidden>Change parent</option>'.$options.'</select>
-                <input id="editSubmit'.$currentItem->id.'" class="editSubmit" type="submit" value="Update" style="display: none">
-                </li></form>';
+        $return = '<li class="liItem"><a href="index.php?id=' . $currentItem->id . '">' . $currentItem->name . '</a>
+                <input id="optionsToggle' . $currentItem->id . '" type="button" class="optionsToggle" onclick="displayOptions(' . $currentItem->id . ')" value="Options">
+                <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
+                <input id="id' . $currentItem->id . '" class="id" type="text" name="id" value="' . $currentItem->id . '" style="display: none"> 
+                <input id="editInput' . $currentItem->id . '" class="editInput" type="text" name="editInput" placeholder="'.$placeholder.'" style="display: none"> 
+                <select id ="editSelect' . $currentItem->id . '" class="editSelect" name="editSelect" style="display: none"><option value="" selected disabled hidden>Change parent</option>' . $options . '</select>
+                <input id="editSubmit' . $currentItem->id . '" class="editSubmit" type="submit" value="Update" style="display: none"></form>
+                <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
+                <input id="idDelete' . $currentItem->id . '" class="idDelete" type="text" name="idDelete" value="' . $currentItem->id . '" style="display: none"> 
+                <input id="delete' . $currentItem->id . '" type="submit" style="display: none" value="Delete"></form>
+                <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
+                <input id="idNew' . $currentItem->id . '" class="idNew" type="text" name="idNew" value="' . $currentItem->id . '" style="display: none"> 
+                <input id="newInput' . $currentItem->id . '" class="newInput" type="text" name="newInput" placeholder="Enter name" style="display: none"> 
+                <input id="newSubmit' . $currentItem->id . '" class="newSubmit" type="submit" value="Add" style="display: none"></form></li>';
+    }
 
     $childCheck = 0;
     foreach ($struct as $item) {
@@ -80,7 +103,7 @@ function structToHtmlList($struct, $currentItem) {
                 $return .= "<ul>";
                 $childCheck = 1;
             }
-            $return .= structToHtmlList($struct, $item);
+            $return .= structToHtmlList($struct, $item, $root);
         }
     }
     if ($childCheck == 1) {
@@ -90,8 +113,10 @@ function structToHtmlList($struct, $currentItem) {
     return $return;
 }
 
-function delete($connection, $struct, $itemId) {
+function delete($itemId) {
 
+    $connection = getDbConnection();
+    $struct = getStruct($connection, "id", "ASC");
     $currentItem = "";
     foreach ($struct as $item) {
         if ($item->id == $itemId) {
@@ -101,7 +126,7 @@ function delete($connection, $struct, $itemId) {
 
     $deletionString = nodeToString($struct, $currentItem);
     pg_query($connection, 'DELETE FROM struct WHERE id IN('.$deletionString.')');
-    header("Location: index.php");
+    pg_close($connection);
 }
 
 function nodeToString($struct, $currentItem) {
@@ -129,6 +154,14 @@ function moveTo($selectInput, $id) {
 
     $connection = getDbConnection();
     pg_query($connection, "UPDATE struct SET parent_id = '".$selectInput."' WHERE id = ".$id);
+    pg_close($connection);
+    header("Location: index.php");
+}
+
+function add($nameInput, $id) {
+
+    $connection= getDbConnection();
+    pg_query($connection, "INSERT INTO struct (name, parent_id) VALUES ('".$nameInput."', ".$id.")");
     pg_close($connection);
     header("Location: index.php");
 }

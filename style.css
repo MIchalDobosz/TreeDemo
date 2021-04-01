@@ -1,3 +1,7 @@
+ul li form {
+    display: inline !important;
+}
+
 .liItem:hover > .optionsToggle {
     display: inline !important;
 }
