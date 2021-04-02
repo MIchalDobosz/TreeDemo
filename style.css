@@ -10,3 +10,37 @@ ul li form {
     display: none;
 }
 
+.liItem .editInput, .liItem .newInput {
+    width: 120px !important;
+}
+
+.liItem .editSelect
+{
+    padding: 3px;
+}
+
+a {
+    text-decoration: none;
+    font-size: 20px;
+    color: black;
+}
+
+a:hover{
+    color: darkcyan;
+}
+
+.btn_change{
+    padding: 2px 3px;
+    position: relative;
+    bottom: 2px;
+}
+
+.optionsToggle{
+    margin-left: 10px;
+}
+
+.liItem
+{
+    margin-bottom: 10px;
+}
+

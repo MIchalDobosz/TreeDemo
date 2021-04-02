@@ -40,8 +40,11 @@ function displayStruct() {
     if (isset($_GET['id'])) {
         foreach ($struct as $item) {
             if ($item->id == $_GET['id']) {
-                //TODO: Dodać wracanko do rodzica
-                return "<ul>".structToHtmlList($struct, $item, $root)."</ul>";
+                if ($item->id == $root->id) {
+                    return '<ul>' . structToHtmlList($struct, $item, $root) . '</ul>';
+                } else {
+                    return '<a href="index.php?id=' . $root->id . '">&larr;Home</a> <a href="index.php?id=' . $item->parent_id . '">&larr;Parent</a> <ul>' . structToHtmlList($struct, $item, $root) . '</ul>';
+                }
             }
         }
     } else {
@@ -56,11 +59,11 @@ function structToHtmlList($struct, $currentItem, $root) {
 
     if ($currentItem->id == $root->id) {
         $return = '<li class="liItem"><a href="index.php?id=' . $currentItem->id . '">' . $currentItem->name . '</a>
-                <input id="optionsToggle' . $currentItem->id . '" type="button" class="optionsToggle" onclick="displayOptions(' . $currentItem->id . ')" value="Options">
+                <input id="optionsToggle' . $currentItem->id . '" type="button" class="optionsToggle btn btn-secondary btn_change" onclick="displayOptions(' . $currentItem->id . ')" value="Options">
                 <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
                 <input id="id' . $currentItem->id . '" class="id" type="text" name="id" value="' . $currentItem->id . '" style="display: none"> 
                 <input id="editInput' . $currentItem->id . '" class="editInput" type="text" name="editInput" placeholder="'.$placeholder.'" style="display: none"> 
-                <input id="editSubmit' . $currentItem->id . '" class="editSubmit" type="submit" value="Update" style="display: none"></form>
+                <input id="editSubmit' . $currentItem->id . '" class="editSubmit btn btn-primary btn_change" type="submit" value="Update" style="display: none"></form>
                 <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
                 <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
                 <input id="idNew' . $currentItem->id . '" class="idNew" type="text" name="idNew" value="' . $currentItem->id . '" style="display: none"> 
@@ -69,7 +72,7 @@ function structToHtmlList($struct, $currentItem, $root) {
                 <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
                 <input id="idNew' . $currentItem->id . '" class="idNew" type="text" name="idNew" value="' . $currentItem->id . '" style="display: none"> 
                 <input id="newInput' . $currentItem->id . '" class="newInput" type="text" name="newInput" placeholder="Enter name" style="display: none"> 
-                <input id="newSubmit' . $currentItem->id . '" class="newSubmit" type="submit" value="Add" style="display: none"></form></li>';
+                <input id="newSubmit' . $currentItem->id . '" class="newSubmit btn btn-success btn_change" type="submit" value="Add" style="display: none"></form></li>';
     } else {
         $options = '';
         $nodeIds = explode(",", nodeToString($struct, $currentItem));
@@ -81,19 +84,19 @@ function structToHtmlList($struct, $currentItem, $root) {
         }
 
         $return = '<li class="liItem"><a href="index.php?id=' . $currentItem->id . '">' . $currentItem->name . '</a>
-                <input id="optionsToggle' . $currentItem->id . '" type="button" class="optionsToggle" onclick="displayOptions(' . $currentItem->id . ')" value="Options">
+                <input id="optionsToggle' . $currentItem->id . '" type="button" class="optionsToggle btn btn-secondary btn_change" onclick="displayOptions(' . $currentItem->id . ')" value="Options">
                 <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
                 <input id="id' . $currentItem->id . '" class="id" type="text" name="id" value="' . $currentItem->id . '" style="display: none"> 
                 <input id="editInput' . $currentItem->id . '" class="editInput" type="text" name="editInput" placeholder="'.$placeholder.'" style="display: none"> 
                 <select id ="editSelect' . $currentItem->id . '" class="editSelect" name="editSelect" style="display: none"><option value="" selected disabled hidden>Change parent</option>' . $options . '</select>
-                <input id="editSubmit' . $currentItem->id . '" class="editSubmit" type="submit" value="Update" style="display: none"></form>
+                <input id="editSubmit' . $currentItem->id . '" class="editSubmit  btn btn-primary btn_change" type="submit" value="Update" style="display: none"></form>
                 <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
                 <input id="idDelete' . $currentItem->id . '" class="idDelete" type="text" name="idDelete" value="' . $currentItem->id . '" style="display: none"> 
-                <input id="delete' . $currentItem->id . '" type="submit" style="display: none" value="Delete"></form>
+                <input id="delete' . $currentItem->id . '" type="submit" style="display: none" value="Delete" class=" btn btn-danger btn_change"></form>
                 <form action=' . htmlspecialchars($_SERVER["PHP_SELF"]) . ' method="post" style="display: inline">
                 <input id="idNew' . $currentItem->id . '" class="idNew" type="text" name="idNew" value="' . $currentItem->id . '" style="display: none"> 
                 <input id="newInput' . $currentItem->id . '" class="newInput" type="text" name="newInput" placeholder="Enter name" style="display: none"> 
-                <input id="newSubmit' . $currentItem->id . '" class="newSubmit" type="submit" value="Add" style="display: none"></form></li>';
+                <input id="newSubmit' . $currentItem->id . '" class="newSubmit  btn btn-success btn_change" type="submit" value="Add" style="display: none"></form></li>';
     }
 
     $childCheck = 0;
